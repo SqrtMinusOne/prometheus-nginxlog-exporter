@@ -28,6 +28,7 @@ type NamespaceConfig struct {
 	Labels           map[string]string `hcl:"labels" yaml:"labels"`
 	RelabelConfigs   []RelabelConfig   `hcl:"relabel" yaml:"relabel_configs"`
 	HistogramBuckets []float64         `hcl:"histogram_buckets" yaml:"histogram_buckets"`
+	MetricsConfig    MetricsConfig     `hcl:"metrics" yaml:"metrics"`
 
 	PrintLog bool `hcl:"print_log" yaml:"print_log"`
 
@@ -46,6 +47,15 @@ type SyslogSource struct {
 	ListenAddress string   `hcl:"listen_address" yaml:"listen_address"`
 	Format        string   `hcl:"format" yaml:"format"`
 	Tags          []string `hcl:"tags" yaml:"tags"`
+}
+
+type MetricsConfig struct {
+	DisableCountTotal             bool `hcl:"disable_count_total" yaml:"disable_count_total"`
+	DisableResponseBytesTotal     bool `hcl:"disable_response_bytes_total" yaml:"disable_response_bytes_total"`
+	DisableRequestBytesTotal      bool `hcl:"disable_request_bytes_total" yaml:"disable_request_bytes_total"`
+	DisableUpstreamSeconds        bool `hcl:"disable_upstream_seconds" yaml:"disable_upstream_seconds"`
+	DisableUpstreamConnectSeconds bool `hcl:"disable_upstream_connect_seconds" yaml:"disable_upstream_connect_seconds"`
+	DisableResponseSeconds		  bool `hcl:"disable_response_seconds" yaml:"disable_response_seconds"`
 }
 
 // StabilityWarnings tests if the NamespaceConfig uses any configuration settings

@@ -254,6 +254,8 @@ Additional labels can be configured in the configuration file (see below).
 `<namespace>` can be omitted or overridden - see <<Namespace-as-labels>> for
 more information.
 
+Metrics can also be excluded - see <<Exclude-metrics>>.
+
 == Configuration file
 
 You can specify a configuration file to read at startup. The configuration file
@@ -590,6 +592,26 @@ The list of files monitored by this namespace will be `/var/log/nginx/main_acces
 ### JSON log_format
 
 You can use the JSON parser by setting the `--parser` command line flag or `parser` config file property to `json`.
+
+### Exclude metrics
+
+You can disable individual metrics by configuring the `metrics` property. The following configuration disables every metric:
+
+[source,hcl]
+----
+namespace "test" {
+  // ...
+  metrics {
+    disable_count_total = true
+    disable_request_bytes_total = true
+    disable_response_bytes_total = true
+    disable_request_bytes_total = true
+    disable_upstream_seconds = true
+    disable_upstream_connect_seconds = true
+    disable_response_seconds = true
+  }
+}
+----
 
 == Frequently Asked Questions
 

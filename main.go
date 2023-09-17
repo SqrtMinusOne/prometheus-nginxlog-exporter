@@ -304,6 +304,7 @@ func processSource(logger *log.Logger, nsCfg *config.NamespaceConfig, t tail.Fol
 			metrics.ParseErrorsTotal.Inc()
 			continue
 		}
+		fields = filterFields(fields, nsCfg)
 
 		for i := range relabelings {
 			if str, ok := fields[relabelings[i].SourceValue]; ok {
@@ -321,7 +322,9 @@ func processSource(logger *log.Logger, nsCfg *config.NamespaceConfig, t tail.Fol
 			notCounterValues = labelValues
 		}
 
-		metrics.CountTotal.WithLabelValues(labelValues...).Inc()
+		if nsCfg.MetricsConfig.DisableCountTotal != true {
+			metrics.CountTotal.WithLabelValues(labelValues...).Inc()
+		}
 
 		if v, ok := observeMetrics(logger, fields, "body_bytes_sent", floatFromFields, metrics.ParseErrorsTotal); ok {
 			metrics.ResponseBytesTotal.WithLabelValues(notCounterValues...).Add(v)
@@ -348,6 +351,29 @@ func processSource(logger *log.Logger, nsCfg *config.NamespaceConfig, t tail.Fol
 	}
 
 	return nil
+}
+
+func filterFields(fields map[string]string, nsCfg *config.NamespaceConfig) map[string]string {
+	result := make(map[string]string)
+	for field, value := range fields {
+		disabled := false
+		switch field {
+		case "body_bytes_sent":
+			disabled = nsCfg.MetricsConfig.DisableResponseBytesTotal
+		case "request_length":
+			disabled = nsCfg.MetricsConfig.DisableRequestBytesTotal
+		case "upstream_response_time":
+			disabled = nsCfg.MetricsConfig.DisableUpstreamSeconds
+		case "upstream_connect_time":
+			disabled = nsCfg.MetricsConfig.DisableUpstreamConnectSeconds
+		case "request_time":
+			disabled = nsCfg.MetricsConfig.DisableResponseSeconds
+		}
+		if !disabled {
+			result[field] = value
+		}
+	}
+	return result
 }
 
 func observeMetrics(logger *log.Logger, fields map[string]string, name string, extractor func(map[string]string, string) (float64, bool, error), parseErrors prometheus.Counter) (float64, bool) {

@@ -16,6 +16,7 @@ func (m *Collection) Init(cfg *config.NamespaceConfig) {
 	relabelings := relabeling.NewRelabelings(cfg.RelabelConfigs)
 	relabelings = append(relabelings, relabeling.DefaultRelabelings...)
 	relabelings = relabeling.UniqueRelabelings(relabelings)
+	relabelings = relabeling.StripExcluded(relabelings)
 
 	for _, r := range relabelings {
 		if !r.OnlyCounter {

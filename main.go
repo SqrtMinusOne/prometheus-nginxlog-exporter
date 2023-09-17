@@ -278,6 +278,7 @@ func processSource(logger *log.Logger, nsCfg *config.NamespaceConfig, t tail.Fol
 	relabelings := relabeling.NewRelabelings(nsCfg.RelabelConfigs)
 	relabelings = append(relabelings, relabeling.DefaultRelabelings...)
 	relabelings = relabeling.UniqueRelabelings(relabelings)
+	relabelings = relabeling.StripExcluded(relabelings)
 
 	staticLabelValues := nsCfg.OrderedLabelValues
 

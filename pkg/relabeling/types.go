@@ -39,6 +39,18 @@ func UniqueRelabelings(relabelings []*Relabeling) []*Relabeling {
 	return result
 }
 
+// StripExcluded removes all relabelings that are marked as excluded
+func StripExcluded(relabelings []*Relabeling) []*Relabeling {
+	result := make([]*Relabeling, 0, len(relabelings))
+	for _, r := range relabelings {
+		if r.Exclude {
+			continue
+		}
+		result = append(result, r)
+	}
+	return result
+}
+
 // StripOnlyCounterValues strips all values that are associated to relabelings only intended for the request counter
 func StripOnlyCounterValues(values []string, relabelings []*Relabeling) []string {
 	result := make([]string, 0, len(values))

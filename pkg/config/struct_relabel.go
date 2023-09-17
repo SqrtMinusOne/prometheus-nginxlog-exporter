@@ -15,6 +15,7 @@ type RelabelConfig struct {
 	Split       int                 `hcl:"split"`
 	Separator   string              `hcl:"separator"`
 	OnlyCounter bool                `hcl:"only_counter" yaml:"only_counter"`
+	Exclude     bool                `hcl:"exclude" yaml:"exclude"`
 
 	WhitelistExists bool
 	WhitelistMap    map[string]interface{}

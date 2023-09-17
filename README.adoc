@@ -548,6 +548,15 @@ relabel "request_uri" {
 }
 ----
 
+If you want to exclude the default label (`status` or `method`), you can do that by using the `exclude` property:
+
+[source,hcl]
+----
+relabel "status" {
+   exclude = true
+}
+----
+
 ### File Globs
 
 You can specify one or more wildcards in the source file names, in which case the wildcards will be resolved to the corresponding list of files at startup of the exporter.

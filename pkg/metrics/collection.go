@@ -14,5 +14,6 @@ type Collection struct {
 	UpstreamConnectSecondsHist *prometheus.HistogramVec
 	ResponseSeconds            *prometheus.SummaryVec
 	ResponseSecondsHist        *prometheus.HistogramVec
+	CurrentUsers			   *prometheus.GaugeVec
 	ParseErrorsTotal           prometheus.Counter
 }

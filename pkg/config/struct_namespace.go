@@ -50,6 +50,7 @@ type SyslogSource struct {
 }
 
 type MetricsConfig struct {
+	CurrentUserInterval           int  `hcl:"current_user_interval" yaml:"current_user_interval"`
 	DisableCountTotal             bool `hcl:"disable_count_total" yaml:"disable_count_total"`
 	DisableResponseBytesTotal     bool `hcl:"disable_response_bytes_total" yaml:"disable_response_bytes_total"`
 	DisableRequestBytesTotal      bool `hcl:"disable_request_bytes_total" yaml:"disable_request_bytes_total"`

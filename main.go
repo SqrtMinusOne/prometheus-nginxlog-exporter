@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 	"net/http"
 	"os"
 	"os/signal"
@@ -274,6 +275,11 @@ func processNamespace(logger *log.Logger, nsCfg *config.NamespaceConfig, metrics
 	return <-errs
 }
 
+type UsersUpdated struct {
+	users map[string]int64
+	mu   sync.Mutex
+}
+
 func processSource(logger *log.Logger, nsCfg *config.NamespaceConfig, t tail.Follower, parser parser.Parser, metrics *metrics.Collection, hasCounterOnlyLabels bool) error {
 	relabelings := relabeling.NewRelabelings(nsCfg.RelabelConfigs)
 	relabelings = append(relabelings, relabeling.DefaultRelabelings...)
@@ -292,6 +298,11 @@ func processSource(logger *log.Logger, nsCfg *config.NamespaceConfig, t tail.Fol
 	labelValues := make([]string, totalLabelCount)
 
 	copy(labelValues, staticLabelValues)
+
+	usersUpdated := UsersUpdated{
+		users: make(map[string]int64),
+	}
+	var ticker *time.Ticker
 
 	for line := range t.Lines() {
 		if nsCfg.PrintLog {
@@ -324,6 +335,29 @@ func processSource(logger *log.Logger, nsCfg *config.NamespaceConfig, t tail.Fol
 
 		if nsCfg.MetricsConfig.DisableCountTotal != true {
 			metrics.CountTotal.WithLabelValues(labelValues...).Inc()
+		}
+
+		if nsCfg.MetricsConfig.CurrentUserInterval > 0 {
+			if v, ok := observeCurrentUsers(fields, &usersUpdated, metrics.ParseErrorsTotal); ok {
+				metrics.CurrentUsers.WithLabelValues(notCounterValues...).Set(v)
+			}
+			if ticker == nil {
+				ticker = time.NewTicker(time.Duration(nsCfg.MetricsConfig.CurrentUserInterval) * time.Second)
+				defer ticker.Stop()
+				go func() {
+					for {
+						<-ticker.C
+						usersUpdated.mu.Lock()
+						for user, lastSeen := range usersUpdated.users {
+							if time.Now().Unix()-lastSeen > int64(nsCfg.MetricsConfig.CurrentUserInterval) {
+								delete(usersUpdated.users, user)
+							}
+						}
+						usersUpdated.mu.Unlock()
+						metrics.CurrentUsers.WithLabelValues(notCounterValues...).Set(float64(len(usersUpdated.users)))
+					}
+				}()
+			}
 		}
 
 		if v, ok := observeMetrics(logger, fields, "body_bytes_sent", floatFromFields, metrics.ParseErrorsTotal); ok {
@@ -374,6 +408,22 @@ func filterFields(fields map[string]string, nsCfg *config.NamespaceConfig) map[s
 		}
 	}
 	return result
+}
+
+func observeCurrentUsers(fields map[string]string, usersUpdated *UsersUpdated, parseErrors prometheus.Counter) (float64, bool) {
+	remoteAddr, ok := fields["remote_addr"]
+	if !ok || remoteAddr == "" {
+		return 0, false
+	}
+	userAgent, ok := fields["http_user_agent"]
+	if !ok || userAgent == "" {
+		return 0, false
+	}
+	userId := remoteAddr + "::" + userAgent
+	usersUpdated.mu.Lock()
+	defer usersUpdated.mu.Unlock()
+	usersUpdated.users[userId] = time.Now().Unix()
+	return float64(len(usersUpdated.users)), true
 }
 
 func observeMetrics(logger *log.Logger, fields map[string]string, name string, extractor func(map[string]string, string) (float64, bool, error), parseErrors prometheus.Counter) (float64, bool) {
@@ -434,4 +484,13 @@ func floatFromFields(fields map[string]string, name string) (float64, bool, erro
 	}
 
 	return f, true, nil
+}
+
+func stringFromFields(fields map[string]string, name string) (string, bool, error) {
+	val, ok := fields[name]
+	if !ok {
+		return "", false, nil
+	}
+
+	return val, true, nil
 }

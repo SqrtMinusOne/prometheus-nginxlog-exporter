@@ -12,5 +12,6 @@ func (c *Collection) MustRegister(r *prometheus.Registry) {
 	r.MustRegister(c.UpstreamConnectSecondsHist)
 	r.MustRegister(c.ResponseSeconds)
 	r.MustRegister(c.ResponseSecondsHist)
+	r.MustRegister(c.CurrentUsers)
 	r.MustRegister(c.ParseErrorsTotal)
 }

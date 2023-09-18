@@ -94,6 +94,13 @@ func (m *Collection) Init(cfg *config.NamespaceConfig) {
 		Buckets:     cfg.HistogramBuckets,
 	}, labels)
 
+	m.CurrentUsers = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   cfg.NamespacePrefix,
+		ConstLabels: cfg.NamespaceLabels,
+		Name:        "http_current_users",
+		Help:        "Current number of users",
+	}, labels)
+
 	m.ParseErrorsTotal = prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace:   cfg.NamespacePrefix,
 		ConstLabels: cfg.NamespaceLabels,

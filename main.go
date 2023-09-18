@@ -342,7 +342,7 @@ func processSource(logger *log.Logger, nsCfg *config.NamespaceConfig, t tail.Fol
 				metrics.CurrentUsers.WithLabelValues(notCounterValues...).Set(v)
 			}
 			if ticker == nil {
-				ticker = time.NewTicker(time.Duration(nsCfg.MetricsConfig.CurrentUserInterval) * time.Second)
+				ticker = time.NewTicker(15 * time.Second)
 				defer ticker.Stop()
 				go func() {
 					for {
